@@ -22,7 +22,7 @@ firebase.initializeApp(firebaseConfig);
 const admin = firebase.auth();
 const database = firebase.database();
 
-const port = 8080;
+const port = process.env.PORT || 8080;
 const refreshTokenSecret = 'thisisatokensecret';
 let refreshTokens = [];
 
