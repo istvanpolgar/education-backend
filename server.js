@@ -2,21 +2,21 @@ const express = require('express');
 const app = express();
 
 const cors = require('cors');
-const setHeaders = require('./src/configs/setHeader');
+const setHeaders = require('./src/functions/setHeader');
 let fs = require('fs');
 
-const generate_exercises = require('./src/configs/generate_exercises');
+const generate_exercises = require('./src/functions/generate_exercises');
 
 const jwt = require('jsonwebtoken');
-const registSchema = require('./src/configs/registValidation');
-const loginSchema = require('./src/configs/loginValidation');
-const authenticateJWT = require('./src/configs/authenticateJWT');
-const createTxt = require('./src/configs/createTxt');
-const deleteZip = require('./src/configs/deleteZip');
+const registSchema = require('./src/functions/registValidation');
+const loginSchema = require('./src/functions/loginValidation');
+const authenticateJWT = require('./src/functions/authenticateJWT');
+const createTxt = require('./src/functions/createTxt');
+const deleteZip = require('./src/functions/deleteZip');
 
 const firebase = require('firebase');
 require('firebase-admin');
-const firebaseConfig = require('./src/configs/firebaseConfig');
+const firebaseConfig = require('./src/functions/firebaseConfig');
 require('express');
 firebase.initializeApp(firebaseConfig);
 const admin = firebase.auth();
@@ -120,7 +120,6 @@ app.post('/page', authenticateJWT, async (req, res) => {
 
 app.post('/login', async (req, res) => {
   try{
-    generate_exercises(1,2);
     const { email, password } = req.body;
 
     if(email === "admin@administration.adm" && password === "admin")
@@ -262,6 +261,29 @@ app.post('/exercises', async (req, res) => {
 });
 
 app.post('/generate', async (req, res) => {
+  let all_exercises = [];
+  let all_categories = [];
+
+  await database.ref('exercises')
+    .once('value')
+    .then((ex) => {
+      ex.forEach( cat => {
+        all_categories.push( cat.val().title );
+        let tips = [];
+        cat.forEach(cat2 => {
+          cat2.forEach( (ex,j) => {
+            tips.push({ 'name' : ex.val().name });
+          })
+        });
+        all_exercises.push({
+          'title': cat.val().title,
+          'tips': tips
+        })
+      });
+    })
+    .catch((error) => {
+      res.send({code: 400, message: error.message});
+    })
   const { token, exercises, params } = req.body;
 
   if (!token) {
@@ -280,7 +302,7 @@ app.post('/generate', async (req, res) => {
     const ex = JSON.parse(exercises);
     const par = JSON.parse(params);
 
-    createTxt(ex, par, token);
+    createTxt(all_exercises, all_categories, ex, par, token);
 
     res.json({
         "token": token

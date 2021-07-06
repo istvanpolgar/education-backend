@@ -103,7 +103,7 @@ const answer1 = (a,b) => {
     return text;
 }
 
-const generated_exercise1 = (type) => {
+const generated_exercise = (type) => {
     let question = "";
     let answer = "";
     switch(type)
@@ -125,4 +125,4 @@ const generated_exercise1 = (type) => {
     };
 };
 
-module.exports = generated_exercise1;
+module.exports = generated_exercise;

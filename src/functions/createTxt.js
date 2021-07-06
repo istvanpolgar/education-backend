@@ -50,7 +50,7 @@ const zipFiles = async (root, dir, zipName) => {
     removeFolder("./src/files/" + dir);
 }
 
-const createTxt = (exercises, params, token) => {
+const createTxt = (all_exercises, all_categories, exercises, params, token) => {
     const TEXextention = ".tex";
     const fileName1 = "Feladatlap";
     const fileName2 = "Megoldókulcs";
@@ -112,7 +112,7 @@ const createTxt = (exercises, params, token) => {
         let a = "";
         for (let i = 1 ; i <= ex.nr ; i++)
         {
-            let {question, answer} = generate_exercises(ex.category, ex.title);
+            let {question, answer} = generate_exercises(all_exercises, all_categories, ex.category, ex.title);
             question_text = question_text + question;
             a = a + answer;
         }
