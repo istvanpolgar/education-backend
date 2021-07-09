@@ -1,27 +1,39 @@
 const { execSync } = require('child_process');
 const generate_exercises = require('./generate_exercises');
+const latex = require('node-latex')
 let fs = require('fs');
-let path = require('path');
 let archiver = require('archiver');
 
-const generateTest = (path, filename, extention, text) => {
-    fs.writeFileSync(".\\" + path + "\\" + filename + extention, text, 
-    (err) => {
-        if (err) 
-            return err;
+const generateTest = async (path, filename, text, root, zipName, lastFileName, token) => {
+    await fs.writeFile(".\\" + path + "\\" + filename + '.tex', text, (err) => {
+        if (err){
+            console.error(err);
+            return err.message;
+        }
     });
 
-    execSync( "pdflatex.exe -output-directory=" + path + " " + path + "\\" + filename + extention, 
-    (error, stderr) => {
-        if (error) {
-            console.log(`error: ${error.message}`);
-            return error.message;
+    const tex_input = await fs.createReadStream(".\\" + path + "\\" + filename + '.tex')
+    const pdf_output = await fs.createWriteStream(".\\" + path + "\\" + filename + '.pdf')
+    const pdf = await latex(tex_input)
+    
+    await pdf.pipe(pdf_output)
+    pdf.on('error', err => {
+        console.error(err);
+        return err.message;
+    })
+    await pdf.on('finish', async () => {
+        if( filename == lastFileName){
+            await zipFiles(root, token, zipName);
         }
-        if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return stderr;
-        }
-    });
+    })
+}
+
+const generateTests = async (root, zipName, nr, token, fileName1, fileName2, question_txt, answer_txt) => {
+    for (let i = 1 ; i <= nr ; i++)
+    {
+        await generateTest("src\\files\\" + token, fileName1 + i, question_txt, root, zipName, fileName2 + nr, token);
+        await generateTest("src\\files\\" + token, fileName2 + i, answer_txt, root, zipName, fileName2 + nr, token);
+    }
 }
 
 const createFolder = (dirName) => {
@@ -34,24 +46,27 @@ const removeFolder = (dirName) => {
     if (fs.existsSync(dirName)){
         fs.rmSync(dirName, { recursive: true });
     }
+    console.log('folder removed');
 }
 
-const zipFiles = async (root, dir, zipName) => {
+const zipFiles = async (root, token, zipName) => {
     let archive = archiver("zip", { zlib: { level: 9 } });
-    let output = fs.createWriteStream(root + zipName);
-    
-    archive.on('error', (err) => {
-        if (err) throw err;
-    });
+    let zip_output = fs.createWriteStream(root + zipName);
 
-    await archive.pipe(output);
-    await archive.glob('*.pdf', {cwd: root + dir});
+    archive.on('error', (err) => {
+        if (err) {
+            console.error(err);
+            return err.message;
+        }
+    });
+    await archive.pipe(zip_output);
+    await archive.glob('*.pdf', {cwd: root + token});
+    await archive.glob('*.tex', {cwd: root + token});
     await archive.finalize();
-    removeFolder("./src/files/" + dir);
+    removeFolder(root + token);
 }
 
-const createTxt = async (all_exercises, all_categories, exercises, params, token) => {
-    const TEXextention = ".tex";
+const createZipFile = async (all_exercises, all_categories, exercises, params, token) => {
     const fileName1 = "Test";
     const fileName2 = "Solution";
     let zipName = token + '.zip';
@@ -122,18 +137,9 @@ const createTxt = async (all_exercises, all_categories, exercises, params, token
     let question_txt = header + question_text + footer;
     let answer_txt = header + answer_text + footer;
 
-    console.log(question_txt);
-    console.log(answer_txt);
-
     createFolder("./src/files/" + token);
-    
-    for (let i = 1 ; i <= params.number ; i++)
-    {
-        await generateTest("src\\files\\" + token, fileName1 + i, TEXextention, question_txt);
-        await generateTest("src\\files\\" + token, fileName2 + i, TEXextention, answer_txt);
-    }
 
-    await zipFiles("./src/files/", token, zipName);
+    await generateTests("./src/files/", zipName, params.number, token, fileName1, fileName2, question_txt, answer_txt);
 }
 
-module.exports = createTxt;
+module.exports = createZipFile;

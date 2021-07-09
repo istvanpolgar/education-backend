@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken');
 const registSchema = require('./src/functions/registValidation');
 const loginSchema = require('./src/functions/loginValidation');
 const authenticateJWT = require('./src/functions/authenticateJWT');
-const createTxt = require('./src/functions/createTxt');
+const createZipFile = require('./src/functions/createZipFile');
 const deleteZip = require('./src/functions/deleteZip');
 
 const firebase = require('firebase');
@@ -328,12 +328,20 @@ app.post('/generate', authenticateJWT, async (req, res) => {
       const ex = JSON.parse(exercises);
       const par = JSON.parse(params);
 
-      await createTxt(all_exercises, all_categories, ex, par, token);
+      await createZipFile(all_exercises, all_categories, ex, par, token);
+      
+      const waitingId = setInterval(() => {
+        const folderIsExists = fs.existsSync('./src/files/' + token);
+        if(!folderIsExists) {
+          res.json({
+            "token": token,
+            "role": jwt.decode(token).role
+          });
+          clearInterval(waitingId)
+        }
+      }, 1000)
+      console.log('done');
 
-      res.json({
-          "token": token,
-          "role": jwt.decode(token).role
-      });
     });
   } catch (e) {
     res.send({code: 400, message: "Something not completed!"});

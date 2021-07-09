@@ -9,6 +9,7 @@
     "import-modules": "^2.1.0",
     "joi": "^17.4.0",
     "jsonwebtoken": "^8.5.1",
+    "node-latex": "^3.0.0",
     "nodemon": "^2.0.9"
   },
   "scripts": {
