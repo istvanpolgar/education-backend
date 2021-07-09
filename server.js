@@ -15,9 +15,7 @@ const createTxt = require('./src/functions/createTxt');
 const deleteZip = require('./src/functions/deleteZip');
 
 const firebase = require('firebase');
-require('firebase-admin');
 const firebaseConfig = require('./src/functions/firebaseConfig');
-require('express');
 firebase.initializeApp(firebaseConfig);
 const admin = firebase.auth();
 const database = firebase.database();
@@ -97,6 +95,25 @@ app.post('/deleteexercise', async (req, res) => {
   }
 });
 
+app.post('/role', authenticateJWT, async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.json({code: 401, message: "Token is missing in /token!"});;
+  }
+
+  if (!refreshTokens.includes(token)) {
+    return res.json({code: 403, message: "Token is wrong in /token 1!"});
+  }
+
+  await jwt.verify(token, refreshTokenSecret, async (err) =>  {
+    if (err) {
+        return res.json({code: 403, message: "Token is wrong in /token 2!"});
+    }
+    res.send({role: jwt.decode(token).role});
+  });
+});
+
 app.post('/page', authenticateJWT, async (req, res) => {
   const { token } = req.body;
 
@@ -108,12 +125,14 @@ app.post('/page', authenticateJWT, async (req, res) => {
       return res.json({code: 403, message: "Token is wrong in /token 1!"});
   }
 
-  await jwt.verify(token, refreshTokenSecret, (err, user) => {
+  await jwt.verify(token, refreshTokenSecret, (err) => {
       if (err) {
           return res.json({code: 403, message: "Token is wrong in /token 2!"});
       }
+
       res.json({
-          "token": token
+          "token": token,
+          "role": jwt.decode(token).role
       });
   });
 });
@@ -121,41 +140,46 @@ app.post('/page', authenticateJWT, async (req, res) => {
 app.post('/login', async (req, res) => {
   try{
     const { email, password } = req.body;
-
-    if(email === "admin@administration.adm" && password === "admin")
-    {
-      res.send({ "token": "administration" });
-      res.end();
-    }
-    else
-      await loginSchema.validateAsync(req.body)
-      .then( () => {
-        admin.signInWithEmailAndPassword(email, password)
-        .then( () => { 
-          if(!admin.currentUser.emailVerified){
-            admin.signOut();
-            res.json({code: 400, message: "Registration is not verified!"});
-          }
-          else
-          {
-            const accessToken = jwt.sign({ 
+    await loginSchema.validateAsync(req.body)
+    .then( () => {
+      admin.signInWithEmailAndPassword(email, password)
+      .then( () => { 
+        if(!admin.currentUser.emailVerified){
+          admin.signOut();
+          res.json({code: 400, message: "Registration is not verified!"});
+        }
+        else
+        {
+          let accessToken = '';
+          
+          if(email === "istvanpolgar@yahoo.com" && password === "admin123") {
+            accessToken = jwt.sign({ 
                 email: email,  
-                password: password
+                role: 'admin'
+              }, 
+              refreshTokenSecret,
+              { expiresIn: '24h' }
+            );
+          } else {
+            accessToken = jwt.sign({ 
+                email: email,  
+                role: 'user'
               }, 
               refreshTokenSecret,
               { expiresIn: '2h' }
             );
-
-            refreshTokens.push(accessToken);
-            
-            res.send({
-              "token": accessToken
-            });
           }
-        })
-        .catch((error) => {
-          res.send({code: 400, message: error.message});
-        })
+          refreshTokens.push(accessToken);
+          
+          res.send({
+            "token": accessToken,
+            "role": jwt.decode(accessToken).role
+          });
+        }
+      })
+      .catch((error) => {
+        res.send({code: 400, message: error.message});
+      })
     })  
     .catch((error) => {
       res.send({code: 400, message: error.message});
@@ -208,8 +232,8 @@ app.post('/regist', async (req, res) => {
 
 app.post('/logout', (req, res) => {
   const { token } = req.body;
-  if(token != "administration")
-    refreshTokens = refreshTokens.filter(t => t !== token);
+  
+  refreshTokens = refreshTokens.filter(t => t !== token);
 
   res.json({code: 100, message: "Logged out!"});
 });
@@ -231,8 +255,8 @@ app.post('/forgotten_pass', async (req, res) => {
 })
 
 app.post('/exercises', async (req, res) => {
-  let exercises = [];
   try{
+    let exercises = [];
     await database.ref('exercises')
     .once('value')
     .then((ex) => {
@@ -260,57 +284,63 @@ app.post('/exercises', async (req, res) => {
   }
 });
 
-app.post('/generate', async (req, res) => {
-  let all_exercises = [];
-  let all_categories = [];
+app.post('/generate', authenticateJWT, async (req, res) => {
+  try{
+    const { token, exercises, params } = req.body;
 
-  await database.ref('exercises')
-    .once('value')
-    .then((ex) => {
-      ex.forEach( cat => {
-        all_categories.push( cat.val().title );
-        let tips = [];
-        cat.forEach(cat2 => {
-          cat2.forEach( (ex,j) => {
-            tips.push({ 'name' : ex.val().name });
+    let all_exercises = [];
+    let all_categories = [];
+
+    await database.ref('exercises')
+      .once('value')
+      .then((ex) => {
+        ex.forEach( cat => {
+          all_categories.push( cat.val().title );
+          let tips = [];
+          cat.forEach(cat2 => {
+            cat2.forEach( (ex,j) => {
+              tips.push({ 'name' : ex.val().name });
+            })
+          });
+          all_exercises.push({
+            'title': cat.val().title,
+            'tips': tips
           })
         });
-        all_exercises.push({
-          'title': cat.val().title,
-          'tips': tips
-        })
-      });
-    })
-    .catch((error) => {
-      res.send({code: 400, message: error.message});
-    })
-  const { token, exercises, params } = req.body;
+      })
+      .catch((error) => {
+        res.send({code: 400, message: error.message});
+      })
 
-  if (!token) {
-    return res.json({code: 401, message: "Token is missing in /token!"});;
-  }
-
-  if (!refreshTokens.includes(token)) {
-    return res.json({code: 403, message: "Token is wrong in /token 1!"});
-  }
-
-  await jwt.verify(token, refreshTokenSecret, (err, user) =>  {
-    if (err) {
-        return res.json({code: 403, message: "Token is wrong in /token 2!"});
+    if (!token) {
+      return res.json({code: 401, message: "Token is missing in /token!"});;
     }
 
-    const ex = JSON.parse(exercises);
-    const par = JSON.parse(params);
+    if (!refreshTokens.includes(token)) {
+      return res.json({code: 403, message: "Token is wrong in /token 1!"});
+    }
 
-    createTxt(all_exercises, all_categories, ex, par, token);
+    await jwt.verify(token, refreshTokenSecret, async (err, user) =>  {
+      if (err) {
+          return res.json({code: 403, message: "Token is wrong in /token 2!"});
+      }
 
-    res.json({
-        "token": token
+      const ex = JSON.parse(exercises);
+      const par = JSON.parse(params);
+
+      await createTxt(all_exercises, all_categories, ex, par, token);
+
+      res.json({
+          "token": token,
+          "role": jwt.decode(token).role
+      });
     });
-  });
+  } catch (e) {
+    res.send({code: 400, message: "Something not completed!"});
+  }
 });
 
-app.get('/download', async (req, res) => {
+app.get('/download', authenticateJWT, async (req, res) => {
   const token = req.headers.authorization.replace('Bearer ','');
   const file = './src/files/' + token + '.zip';
 
@@ -322,12 +352,15 @@ app.get('/download', async (req, res) => {
     return res.json({code: 403, message: "Token is wrong in /token 1!"});
   }
 
-  await jwt.verify(token, refreshTokenSecret, (err) =>  {
+  await jwt.verify(token, refreshTokenSecret, async (err) =>  {
     if (err) {
         return res.json({code: 403, message: "Token is wrong in /token 2!"});
     }
-    res.download(file);
-    setTimeout(() => deleteZip(file), 0);
+    res.download(file, (err) => {
+      if(err)
+        return res.send({code: 403, message: "The download is aborted!"});
+      deleteZip(file);
+    });
   });
 });
 

@@ -50,10 +50,10 @@ const zipFiles = async (root, dir, zipName) => {
     removeFolder("./src/files/" + dir);
 }
 
-const createTxt = (all_exercises, all_categories, exercises, params, token) => {
+const createTxt = async (all_exercises, all_categories, exercises, params, token) => {
     const TEXextention = ".tex";
-    const fileName1 = "Feladatlap";
-    const fileName2 = "Megoldókulcs";
+    const fileName1 = "Test";
+    const fileName2 = "Solution";
     let zipName = token + '.zip';
     let question_text = "";
     let answer_text = "";
@@ -108,8 +108,8 @@ const createTxt = (all_exercises, all_categories, exercises, params, token) => {
 
     const footer = "\n\n\\end{document}\n";
 
-    exercises.map( ex => {
-        let a = "";
+    let a = "";
+    exercises.map((ex) => {
         for (let i = 1 ; i <= ex.nr ; i++)
         {
             let {question, answer} = generate_exercises(all_exercises, all_categories, ex.category, ex.title);
@@ -122,15 +122,18 @@ const createTxt = (all_exercises, all_categories, exercises, params, token) => {
     let question_txt = header + question_text + footer;
     let answer_txt = header + answer_text + footer;
 
+    console.log(question_txt);
+    console.log(answer_txt);
+
     createFolder("./src/files/" + token);
     
     for (let i = 1 ; i <= params.number ; i++)
     {
-        generateTest("src\\files\\" + token, fileName1 + i, TEXextention, question_txt);
-        generateTest("src\\files\\" + token, fileName2 + i, TEXextention, answer_txt);
+        await generateTest("src\\files\\" + token, fileName1 + i, TEXextention, question_txt);
+        await generateTest("src\\files\\" + token, fileName2 + i, TEXextention, answer_txt);
     }
 
-    zipFiles("./src/files/", token, zipName);
+    await zipFiles("./src/files/", token, zipName);
 }
 
 module.exports = createTxt;

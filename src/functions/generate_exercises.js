@@ -3,10 +3,6 @@ const importModules = require('import-modules');
 const modules = importModules('exercises');
 
 const generate_exercises = (exercises, categories, category, exercise) => {
-    console.log(categories);
-    console.log(exercises.tips);
-    console.log(category);
-    console.log(exercise);
     let ex_index = 0;
     let cat_index = 0;
 
@@ -17,16 +13,19 @@ const generate_exercises = (exercises, categories, category, exercise) => {
     exercises.forEach( cat => {
         if( cat.title == category )
         {
-            console.log(cat);
             cat.tips.forEach((ex,j) => {
                 if( ex.name == exercise )
                     ex_index = j;
             })
         }
     })
-    console.log(cat_index + 1);
-    console.log(ex_index + 1);
-    return modules['category' + (cat_index + 1)](ex_index + 1);
+
+    const {question, answer} = modules['category' + (cat_index + 1)](ex_index + 1);
+
+    return {
+        question: question, 
+        answer: answer
+    };
 }
 
 module.exports = generate_exercises;

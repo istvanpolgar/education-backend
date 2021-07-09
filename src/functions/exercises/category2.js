@@ -85,13 +85,13 @@ const question1 = (a,b,c) => {
 }
 
 const answer1 = (a,b,c) => {
-    let text = "\n\\begin{meg} ";
+    let text = "\n\\begin{meg}\n ";
     if(b != 0)
         text = text + "Oldd meg a $" + getUnsignedInt(a,false,true) + "x^2" + getSignedInt(b) + "x" + getSignedInt(c) + "=0$\n";
     else
         text = text + "Oldd meg a $" + getUnsignedInt(a,false,true) + "x^2" + getSignedInt(c) + "=0$\n";
     
-    text = text + "$\n\\end{meg}\n";
+    text = text + "\n\\end{meg}\n";
     return text;
 }
 
