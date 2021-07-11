@@ -1,5 +1,4 @@
-const { execSync } = require('child_process');
-const generate_exercises = require('./generate_exercises');
+const generate_exercises_text = require('./generate_exercises_text');
 const latex = require('node-latex')
 let fs = require('fs');
 let archiver = require('archiver');
@@ -127,7 +126,7 @@ const createZipFile = async (all_exercises, all_categories, exercises, params, t
     exercises.map((ex) => {
         for (let i = 1 ; i <= ex.nr ; i++)
         {
-            let {question, answer} = generate_exercises(all_exercises, all_categories, ex.category, ex.title);
+            let {question, answer} = generate_exercises_text(all_exercises, all_categories, ex.category, ex.title);
             question_text = question_text + question;
             a = a + answer;
         }

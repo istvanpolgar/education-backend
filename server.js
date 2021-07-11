@@ -340,7 +340,6 @@ app.post('/generate', authenticateJWT, async (req, res) => {
           clearInterval(waitingId)
         }
       }, 1000)
-      console.log('done');
 
     });
   } catch (e) {
