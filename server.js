@@ -5,8 +5,6 @@ const cors = require('cors');
 const setHeaders = require('./src/functions/setHeader');
 let fs = require('fs');
 
-const generate_exercises = require('./src/functions/generate_exercises');
-
 const jwt = require('jsonwebtoken');
 const registSchema = require('./src/functions/registValidation');
 const loginSchema = require('./src/functions/loginValidation');
