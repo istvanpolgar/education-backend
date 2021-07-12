@@ -45,7 +45,6 @@ const removeFolder = (dirName) => {
     if (fs.existsSync(dirName)){
         fs.rmSync(dirName, { recursive: true });
     }
-    console.log('folder removed');
 }
 
 const zipFiles = async (root, token, zipName) => {

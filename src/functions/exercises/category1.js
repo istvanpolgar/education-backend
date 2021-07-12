@@ -103,34 +103,6 @@ const answer1 = (a,b) => {
     return text;
 }
 
-const question2 = (a,b) => {
-    let text = "\\begin{fel}\n";
-    text = text + "Oldd meg a $" + getUnsignedInt(a,false,true) + "x" + getSignedInt(b) + "=0$ egyenletet a valós számok halmazán! \n";
-    text = text + "\\end{fel} \n\n";
-    return text;
-}
-
-const answer2 = (a,b) => {
-    let text = "\n\\begin{meg} ";
-    text = text + "$" + getUnsignedInt(a,false,true) + "x" + getSignedInt(b) + "=0 \\Leftrightarrow \n";
-    if (b != 0)
-    {
-        text = text + getUnsignedInt(a,false,true) + "x=" + getUnsignedInt(-b,true);
-        if (a != 1)
-        {
-            text = text + "\\Leftrightarrow \n"; 
-            if (a != -1)
-                text = text + "x=" + getUnsignedFrac(-b,a,true) + "\n";
-            else
-                text = text + "x";
-            text = text + getSimplifiedFrac(-b,a);
-        }
-    }
-    else
-        text = text + "x=0";
-    text = text + "$\n\\end{meg}\n";
-    return text;
-}
 
 const generated_exercise = (type) => {
     let question = "";
@@ -146,16 +118,7 @@ const generated_exercise = (type) => {
             answer = answer + answer1(a,b);
             break;
         }
-        case 2: {
-            let a = getRandomInt(-30,30);
-            while(a === 0)
-                a = getRandomInt(-30,30);
-            const b = getRandomInt(-30,30);
-            question = question + question2(a,b); 
-            answer = answer + answer2(a,b);
-            break;
-        }
-        default: console.log("Ajjajajjaajajaj");
+        default: question = "Exercise is undefind"; answer = "Exercise is undefind";
     }
     return {
         question: question, 
