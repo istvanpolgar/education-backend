@@ -11,6 +11,7 @@ const loginSchema = require('./src/functions/loginValidation');
 const authenticateJWT = require('./src/functions/authenticateJWT');
 const createZipFile = require('./src/functions/createZipFile');
 const deleteZip = require('./src/functions/deleteZip');
+const createFolder= require('./src/functions/createFolder');
 
 const firebase = require('firebase');
 const firebaseConfig = require('./src/functions/firebaseConfig');
@@ -23,9 +24,7 @@ const refreshTokenSecret = 'thisisatokensecret';
 let refreshTokens = [];
 
 app.use(cors());
-
 app.use(setHeaders);
-
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
@@ -283,6 +282,7 @@ app.post('/exercises', async (req, res) => {
 });
 
 app.post('/generate', authenticateJWT, async (req, res) => {
+  createFolder('./src/files');
   try{
     const { token, exercises, params } = req.body;
 
