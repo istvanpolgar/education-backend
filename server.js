@@ -24,7 +24,7 @@ const refreshTokenSecret = 'thisisatokensecret';
 let refreshTokens = [];
 
 app.use(cors({
-  origin: [`http://localhost:${port}`, 'https://polgar-frontapp.herokuapp.com/']
+  origin: '*'
 }));
 app.use(setHeaders);
 app.use(express.urlencoded({extended: true}));
