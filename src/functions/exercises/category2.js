@@ -82,7 +82,7 @@ const getSimplifiedFrac = (numerator, denominator) => {
 
 const getSqrtFrac = (numerator, denominator) => {
     numerator = Math.abs(numerator);
-    denominator = Math.abs(denumerator)
+    denominator = Math.abs(denominator)
     let lnko = getLNKO(numerator,denominator);
 
     if (numerator%denominator == 0 && lnko!=-1)
