@@ -1,38 +1,53 @@
-const generate_exercises_text = require('./generate_exercises_text');
+const generateExercisesText = require('./generateExercisesText');
 const latex = require('node-latex')
 let fs = require('fs');
 let archiver = require('archiver');
+let isPDF = require("is-pdf-valid");
 
-const generateTest = async (path, filename, text, root, zipName, lastFileName, token) => {
-    await fs.writeFile(".\\" + path + "\\" + filename + '.tex', text, (err) => {
-        if (err){
+const generateTest = (path, filename, text) => {
+    const texPath =  path + filename + '.tex';
+    const pdfPath = path + filename + '.pdf';
+    fs.writeFileSync(texPath, text, (err) => {
+        if (err) {
             console.error(err);
             return err.message;
         }
-    });
+    })
 
-    const tex_input = await fs.createReadStream(".\\" + path + "\\" + filename + '.tex')
-    const pdf_output = await fs.createWriteStream(".\\" + path + "\\" + filename + '.pdf')
-    const pdf = await latex(tex_input)
-    
-    await pdf.pipe(pdf_output)
+    const tex_input = fs.createReadStream(texPath);
+    const pdf_output = fs.createWriteStream(pdfPath);
+    const pdf = latex(tex_input);
+
+    pdf.pipe(pdf_output);
     pdf.on('error', err => {
         console.error(err);
         return err.message;
-    })
-    await pdf.on('finish', async () => {
-        if( filename == lastFileName){
-            await zipFiles(root, token, zipName);
-        }
-    })
+    });
+    pdf.on('finish', () => {
+        return filename + ".pdf created";
+    });
 }
 
-const generateTests = async (root, zipName, nr, token, fileName1, fileName2, question_txt, answer_txt) => {
-    for (let i = 1 ; i <= nr ; i++)
-    {
-        await generateTest("src\\files\\" + token, fileName1 + i, question_txt, root, zipName, fileName2 + nr, token);
-        await generateTest("src\\files\\" + token, fileName2 + i, answer_txt, root, zipName, fileName2 + nr, token);
-    }
+const generateTests = (exercises, all_exercises, all_categories, num, token, fileName1, fileName2, header, footer) => {
+    console.log(num);
+    num.forEach( async (i) => {
+        let question_text = "";
+        let answer_text = "";
+        exercises.map((ex) => {
+            for (let j = 1 ; j <= ex.nr ; j++)
+            {
+                let {question, answer} = generateExercisesText(all_exercises, all_categories, ex.category, ex.title);
+                question_text = question_text + question;
+                answer_text = answer_text + answer;
+            }
+        });
+        answer_text = question_text + answer_text;
+        let question_txt = header + question_text + footer;
+        let answer_txt = header + answer_text + footer;
+        
+        generateTest("./src/files/" + token + '/', fileName1 + (i+1), question_txt);
+        generateTest("./src/files/" + token + '/', fileName2 + (i+1), answer_txt);
+    })
 }
 
 const createFolder = (dirName) => {
@@ -61,15 +76,13 @@ const zipFiles = async (root, token, zipName) => {
     await archive.glob('*.pdf', {cwd: root + token});
     await archive.glob('*.tex', {cwd: root + token});
     await archive.finalize();
-    removeFolder(root + token);
 }
 
 const createZipFile = async (all_exercises, all_categories, exercises, params, token) => {
     const fileName1 = "Test";
     const fileName2 = "Solution";
     let zipName = token + '.zip';
-    let question_text = "";
-    let answer_text = "";
+    let num = [];
 
     let header =  "\\documentclass[12pt]{article}\n" + 
                     "\\usepackage{color}\n" +
@@ -121,23 +134,31 @@ const createZipFile = async (all_exercises, all_categories, exercises, params, t
 
     const footer = "\n\n\\end{document}\n";
 
-    let a = "";
-    exercises.map((ex) => {
-        for (let i = 1 ; i <= ex.nr ; i++)
-        {
-            let {question, answer} = generate_exercises_text(all_exercises, all_categories, ex.category, ex.title);
-            question_text = question_text + question;
-            a = a + answer;
-        }
-        answer_text = question_text + a;
-    });
-
-    let question_txt = header + question_text + footer;
-    let answer_txt = header + answer_text + footer;
+    for (let i = 0 ; i < params.number ; i++)
+        num[i]=i;
 
     createFolder("./src/files/" + token);
 
-    await generateTests("./src/files/", zipName, params.number, token, fileName1, fileName2, question_txt, answer_txt);
+    await generateTests(exercises, all_exercises, all_categories, num, token, fileName1, fileName2, header, footer);
+
+    const waitingId = setInterval( async () => {
+        let filesExists = true;
+        for(let i = 1 ; i <= params.number ; i++)
+        {
+            const file1 = fs.readFileSync("./src/files/" + token + '/' + fileName1 + i + ".pdf");
+            const file2 = fs.readFileSync("./src/files/" + token + '/' + fileName2 + i + ".pdf");
+            if(!isPDF(file1) || !isPDF(file2))
+                filesExists = false;
+        }
+        if(filesExists) {
+            zipFiles('./src/files/',token, zipName)
+            .then(() => {
+                removeFolder('./src/files/' + token);
+            })
+            clearInterval(waitingId);
+        }
+    }, 1000)
+    
 }
 
 module.exports = createZipFile;

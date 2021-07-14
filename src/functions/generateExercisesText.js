@@ -2,7 +2,7 @@ const importModules = require('import-modules');
 
 const modules = importModules('exercises');
 
-const generate_exercises_text = (exercises, categories, category, exercise) => {
+const generateExercisesText = (exercises, categories, category, exercise) => {
     let ex_index = 0;
     let cat_index = 0;
 
@@ -28,4 +28,4 @@ const generate_exercises_text = (exercises, categories, category, exercise) => {
     };
 }
 
-module.exports = generate_exercises_text;
+module.exports = generateExercisesText;

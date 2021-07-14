@@ -11,6 +11,7 @@
     "firebase": "^8.6.5",
     "firebase-admin": "^9.9.0",
     "import-modules": "^2.1.0",
+    "is-pdf-valid": "^0.0.1",
     "joi": "^17.4.0",
     "jsonwebtoken": "^8.5.1",
     "node-latex": "^3.0.0",
