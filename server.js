@@ -282,7 +282,6 @@ app.post('/exercises', async (req, res) => {
 });
 
 app.post('/generate', authenticateJWT, async (req, res) => {
-  createFolder('./src/files');
   try{
     const { token, exercises, params } = req.body;
 
@@ -371,4 +370,5 @@ app.get('/download', authenticateJWT, async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Education app listening at http://localhost:${port}`);
+  createFolder('./src/files');
 })
