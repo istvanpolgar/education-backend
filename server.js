@@ -26,7 +26,7 @@ app.use(cors());
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
-app.post('/addcategory', async (req, res) => {
+app.post('/addcategory', cors(), async (req, res) => {
   try{
     const { category } = req.body;
     await database.ref('exercises/' + category)
@@ -42,7 +42,7 @@ app.post('/addcategory', async (req, res) => {
   }
 });
 
-app.post('/deletecategory', async (req, res) => {
+app.post('/deletecategory', cors(), async (req, res) => {
   try{
     const { category } = req.body;
     await database.ref('exercises/' + category)
@@ -58,7 +58,7 @@ app.post('/deletecategory', async (req, res) => {
   }
 });
 
-app.post('/addexercise', async (req, res) => {
+app.post('/addexercise', cors(), async (req, res) => {
   try{
     const { category, exercise } = req.body;
     await database.ref('exercises/' + category + '/tips/' + exercise)
@@ -74,7 +74,7 @@ app.post('/addexercise', async (req, res) => {
   }
 });
 
-app.post('/deleteexercise', async (req, res) => {
+app.post('/deleteexercise', cors(), async (req, res) => {
   try{
     const { category, exercise } = req.body;
     await database.ref('exercises/' + category + '/tips/' + exercise)
@@ -90,7 +90,7 @@ app.post('/deleteexercise', async (req, res) => {
   }
 });
 
-app.post('/role', authenticateJWT, async (req, res) => {
+app.post('/role', cors(), authenticateJWT, async (req, res) => {
   const { token } = req.body;
 
   if (!token) {
@@ -109,7 +109,7 @@ app.post('/role', authenticateJWT, async (req, res) => {
   });
 });
 
-app.post('/page', authenticateJWT, async (req, res) => {
+app.post('/page', cors(), authenticateJWT, async (req, res) => {
   const { token } = req.body;
 
   if (!token) {
@@ -132,7 +132,7 @@ app.post('/page', authenticateJWT, async (req, res) => {
   });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', cors(), async (req, res) => {
   try{
     const { email, password } = req.body;
     await loginSchema.validateAsync(req.body)
@@ -184,7 +184,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/regist', async (req, res) => {
+app.post('/regist', cors(), async (req, res) => {
   try{
     const { fname, lname, email, password, teacher } = req.body;
 
@@ -225,7 +225,7 @@ app.post('/regist', async (req, res) => {
   }
 });
 
-app.post('/logout', (req, res) => {
+app.post('/logout', cors(), (req, res) => {
   const { token } = req.body;
   
   refreshTokens = refreshTokens.filter(t => t !== token);
@@ -233,7 +233,7 @@ app.post('/logout', (req, res) => {
   res.json({code: 100, message: "Logged out!"});
 });
 
-app.post('/forgotten_pass', async (req, res) => {
+app.post('/forgotten_pass', cors(), async (req, res) => {
   try{
     const { email } = req.body;
 
@@ -249,7 +249,7 @@ app.post('/forgotten_pass', async (req, res) => {
 }
 })
 
-app.post('/exercises', async (req, res) => {
+app.post('/exercises', cors(), async (req, res) => {
   try{
     let exercises = [];
     await database.ref('exercises')
@@ -279,7 +279,7 @@ app.post('/exercises', async (req, res) => {
   }
 });
 
-app.post('/generate', authenticateJWT, async (req, res) => {
+app.post('/generate', cors(), authenticateJWT, async (req, res) => {
   try{
     const { token, exercises, params } = req.body;
 
@@ -342,7 +342,7 @@ app.post('/generate', authenticateJWT, async (req, res) => {
   }
 });
 
-app.get('/download', authenticateJWT, async (req, res) => {
+app.get('/download', cors(), authenticateJWT, async (req, res) => {
   const token = req.headers.authorization.replace('Bearer ','');
   const file = './src/files/' + token + '.zip';
 
