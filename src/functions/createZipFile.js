@@ -29,7 +29,6 @@ const generateTest = (path, filename, text) => {
 }
 
 const generateTests = (exercises, all_exercises, all_categories, num, token, fileName1, fileName2, header, footer) => {
-    console.log(num);
     num.forEach( async (i) => {
         let question_text = "";
         let answer_text = "";

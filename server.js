@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 
 const cors = require('cors');
-const setHeaders = require('./src/functions/setHeader');
 let fs = require('fs');
 
 const jwt = require('jsonwebtoken');
@@ -23,10 +22,7 @@ const port = process.env.PORT || 8080;
 const refreshTokenSecret = 'thisisatokensecret';
 let refreshTokens = [];
 
-app.use(cors({
-  origin: '*'
-}));
-app.use(setHeaders);
+app.use(cors());
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
