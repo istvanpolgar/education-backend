@@ -23,7 +23,9 @@ const port = process.env.PORT || 8080;
 const refreshTokenSecret = 'thisisatokensecret';
 let refreshTokens = [];
 
-app.use(cors());
+app.use(cors({
+  origin: [`http://localhost:${port}`, 'https://polgar-frontapp.herokuapp.com/']
+}));
 app.use(setHeaders);
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
