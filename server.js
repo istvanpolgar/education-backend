@@ -284,13 +284,11 @@ app.post('/generate', cors(), authenticateJWT, async (req, res) => {
     const { token, exercises, params } = req.body;
 
     let all_exercises = [];
-    let all_categories = [];
 
     await database.ref('exercises')
       .once('value')
       .then((ex) => {
         ex.forEach( cat => {
-          all_categories.push( cat.val().title );
           let tips = [];
           cat.forEach(cat2 => {
             cat2.forEach( (ex,j) => {
@@ -323,7 +321,7 @@ app.post('/generate', cors(), authenticateJWT, async (req, res) => {
       const ex = JSON.parse(exercises);
       const par = JSON.parse(params);
 
-      await createZipFile(all_exercises, all_categories, ex, par, token);
+      await createZipFile(all_exercises, ex, par, token);
       
       const waitingId = setInterval(() => {
         const folderIsExists = fs.existsSync('./src/files/' + token);

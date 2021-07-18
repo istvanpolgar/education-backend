@@ -28,14 +28,14 @@ const generateTest = (path, filename, text) => {
     });
 }
 
-const generateTests = (exercises, all_exercises, all_categories, num, token, fileName1, fileName2, header, footer) => {
+const generateTests = (exercises, all_exercises, num, token, fileName1, fileName2, header, footer) => {
     num.forEach( async (i) => {
         let question_text = "";
         let answer_text = "";
         exercises.map((ex) => {
             for (let j = 1 ; j <= ex.nr ; j++)
             {
-                let {question, answer} = generateExercisesText(all_exercises, all_categories, ex.category, ex.title);
+                let {question, answer} = generateExercisesText(all_exercises, ex.category, ex.title);
                 question_text = question_text + question;
                 answer_text = answer_text + answer;
             }
@@ -77,52 +77,41 @@ const zipFiles = async (root, token, zipName) => {
     await archive.finalize();
 }
 
-const createZipFile = async (all_exercises, all_categories, exercises, params, token) => {
+const createZipFile = async (all_exercises, exercises, params, token) => {
     const fileName1 = "Test";
     const fileName2 = "Solution";
     let zipName = token + '.zip';
     let num = [];
 
-    let header =  "\\documentclass[12pt]{article}\n" + 
-                    "\\usepackage{color}\n" +
+    let header =    "\\documentclass[12pt]{article}\n" + 
+                    "\\usepackage[utf8]{inputenc}\n" +
+                    "\\usepackage[magyar]{babel}\n" +
                     "\\usepackage{amsmath, geometry}\n" +
                     "\\usepackage{amsfonts}\n" +
                     "\\usepackage{amssymb}\n" +
-                    "\\usepackage[utf8]{inputenc}\n" +
-                    "\\usepackage[magyar]{babel}\n" +
-                    "\\usepackage{multicol}\n" +
                     "\\usepackage{enumitem}\n" +
-                    "\\usepackage{pgf,tikz}\n" +
                     "\\usepackage{mathrsfs}\n" +
                     "\\usepackage{fancyhdr}\n" +
-                    "\\usetikzlibrary{arrows}\n" +
                     "\\newtheorem{fel}{Feladat}\n" +
                     "\\newtheorem{meg}{Megoldás}\n" +
                     "\\newtheorem{megj}{Megjegyzés}\n" +
-                    "\\usepackage{cite}\n" +
-                    "\\usetikzlibrary{arrows}\n" +
-                    "\\usetikzlibrary[patterns]\n" +
                     "\\geometry{\n" +
-                    "a4paper,\n" +
-                    "total={170mm,257mm},\n" +
-                    "left=20mm,\n" +
-                    "top=20mm,}\n" +
+                    "   a4paper,\n" +
+                    "   total={170mm,257mm},\n" +
+                    "   left=20mm,\n" +
+                    "   top=20mm,\n}\n" +
                     "\\thispagestyle{fancy}\n" +
                     "\\fancyfoot[C]{" + 
                     "\n" + `${params.begin}` + " - " + `${params.end}` + "\n}\n" +
-                    "\\fancyhead[C]{";
-    if(params.class)
-        header = header + "\n\\title{" + `${params.title}` + " - " + `${params.class}` + " osztály \\vspace{-3ex}}\n";
-    else
-        header = header + "\n\\title{" + `${params.title}` + " \\vspace{-3ex}}\n";
-    header =    header +
-                "\\date{" + `${params.date}` + "} \n" + 
-                "\\maketitle \n" +
-                "\\vspace{-5ex}\n}\n" +
-                "\\renewcommand{\\footrulewidth}{1pt} \n" +
-                "\\setlength{\\headheight}{150pt} \n" +
-                "\\setlength{\\textheight}{600pt} \n" +
-                "\\begin{document}\n\n";
+                    "\\fancyhead[L]{";
+                        if(params.class)
+                            header = header + "\n\\huge{" + `${params.title}` + " - " + `${params.class}` + " osztály}\n}\n";
+                        else
+                            header = header + "\n\\huge{" + `${params.title}` + "}\n}\n";
+                    
+                    header =    header + "\\fancyhead[R]{\n" + 
+                    "\\large{" + `${params.date}` + "}\n}\n" + 
+                    "\\begin{document}\n\n";
     if(params.description)
     {
         header =    header + 
@@ -138,7 +127,7 @@ const createZipFile = async (all_exercises, all_categories, exercises, params, t
 
     createFolder("./src/files/" + token);
 
-    await generateTests(exercises, all_exercises, all_categories, num, token, fileName1, fileName2, header, footer);
+    await generateTests(exercises, all_exercises, num, token, fileName1, fileName2, header, footer);
 
     const waitingId = setInterval( async () => {
         let filesExists = true;
